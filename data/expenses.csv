@@ -1,3 +1,2 @@
-name,category,amount,id,date
-piwo,1,2.0,d22b7cf9-2be7-4de4-a5a9-fa3c1182b189,2025-02-10 00:36:26.559445
-gowno,2,1.0,812b5792-5e94-4f44-be3e-a8ae2b09495d,2025-02-10 00:41:58.277689
+name,category_id,amount,id,date
+string,34f1444b-c8bd-42c2-b7c0-4e6848c698fc,1.0,4d1a362e-ac9a-435d-aea2-7173013f395c,2025-02-19 18:36:42.729025

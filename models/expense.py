@@ -9,5 +9,5 @@ class Expense(ExpenseBase):
     id: UUID = Field(default_factory=uuid4)
     name: str
     amount: float
-    category: int
+    category_id: UUID
     date: datetime = Field(default_factory=datetime.now)
