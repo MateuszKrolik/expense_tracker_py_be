@@ -1,39 +1,93 @@
-import os
-import csv
+from typing import List, Optional
+from uuid import UUID
+from models.category import Category
 from models.expense import Expense, ExpenseBase
-from services.budget import decrement_remaining_budget, get_budget_for_given_month
+from services.budget import get_budget_for_given_month
 from fastapi import status, HTTPException
-from services.category import get_all_category_ids
+from services.database import SessionDep
+from sqlmodel import select
 
 
-EXPENSES_PATH = "data/expenses.csv"
-
-
-def save_expense(expense_base: ExpenseBase) -> Expense:
+def save_expense_after_successful_validation(
+    session: SessionDep, expense_base: ExpenseBase
+) -> Optional[Expense]:
+    result: Optional[Expense] = None
     expense = Expense(**expense_base.model_dump())
-    budget_before_expense = get_budget_for_given_month(
-        year=expense.date.year, month=expense.date.month
+    category = session.get(Category, expense.category_id)
+    if not category:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Category not found, either pick from available or create one.",
+        )
+    budget = get_budget_for_given_month(
+        session=session, year=expense.date.year, month=expense.date.month
     )
-    budget_after_expense = budget_before_expense.remaining_budget - expense.amount
+    budget_after_expense = budget.remaining_budget - expense.amount
     if budget_after_expense < 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Expense too large for remaining budget in given month.",
         )
-    else:
-        decrement_remaining_budget(
-            budget=budget_before_expense, decrement=expense.amount
+    budget.remaining_budget -= expense.amount
+    # completes transaction
+    result = _save_expense(session=session, expense=expense)
+
+    return result
+
+
+def _save_expense(session: SessionDep, expense: Expense) -> Optional[Expense]:
+    result: Optional[Expense] = None
+    try:
+        session.add(expense)
+        session.commit()
+        session.refresh(expense)
+        result = expense
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
-    with open(EXPENSES_PATH, "a") as file:
-        writer = csv.writer(file)
-        if not os.path.isfile(EXPENSES_PATH) or os.stat(EXPENSES_PATH).st_size == 0:
-            writer.writerow(expense.model_dump().keys())
-        if expense.category_id in get_all_category_ids():
-            writer.writerow(expense.model_dump().values())
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Category not found, pick from existing ones.",
-            )
+
+    return result
+
+
+def get_all_expenses(session: SessionDep) -> List[Expense]:
+    try:
+        return session.exec(select(Expense)).all()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+
+
+def get_single_expense_by_id(
+    session: SessionDep, expense_id: UUID
+) -> Optional[Expense]:
+    expense = session.get(Expense, expense_id)
+    if not expense:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Expense not found.",
+        )
 
     return expense
+
+
+def get_all_expenses_for_category_id(
+    session: SessionDep, category_id: UUID
+) -> List[Expense]:
+    category = session.get(Category, category_id)
+    if not category:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
+        )
+    try:
+        return session.exec(
+            select(Expense).where(Expense.category_id == category_id)
+        ).all()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )

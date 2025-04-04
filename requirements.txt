@@ -2,3 +2,5 @@ fastapi[standard]
 attrs
 pydantic
 uvicorn
+sqlmodel
+sqlalchemy
