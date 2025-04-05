@@ -45,9 +45,11 @@ async def get_expense_by_id(session: SessionDep, expense_id: UUID):
 
 @app.get("/categories/{category_id}/expenses")
 async def get_expenses_by_category_id(
-    session: SessionDep, category_id: UUID
+    session: SessionDep, category_id: UUID, name_query: Optional[str] = Query(None)
 ) -> List[Expense]:
-    return get_all_expenses_for_category_id(session=session, category_id=category_id)
+    return get_all_expenses_for_category_id(
+        session=session, category_id=category_id, name_query=name_query
+    )
 
 
 @app.post(path="/categories", status_code=status.HTTP_201_CREATED)

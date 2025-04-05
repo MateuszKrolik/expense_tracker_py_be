@@ -80,7 +80,7 @@ def get_single_expense_by_id(
 
 
 def get_all_expenses_for_category_id(
-    session: SessionDep, category_id: UUID
+    session: SessionDep, category_id: UUID, name_query: Optional[str] = Query(None)
 ) -> List[Expense]:
     category = session.get(Category, category_id)
     if not category:
@@ -88,9 +88,10 @@ def get_all_expenses_for_category_id(
             status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
         )
     try:
-        return session.exec(
-            select(Expense).where(Expense.category_id == category_id)
-        ).all()
+        query = select(Expense)
+        if name_query is not None:
+            query = query.where(cast(Expense.name, String).ilike(f"%{name_query}%"))
+        return session.exec(query.where(Expense.category_id == category_id)).all()
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
