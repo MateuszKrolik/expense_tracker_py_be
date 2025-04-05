@@ -1,12 +1,23 @@
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import APIRouter
-from services.budget import get_budget_for_given_month, set_budget_for_given_month
+from services.budget import (
+    create_offline_budgets_batch,
+    get_budget_for_given_month,
+    set_budget_for_given_month,
+)
 from services.database import SessionDep
 from models.budget import Budget, BudgetBase
 
 
 router = APIRouter(prefix="/budgets", tags=["budgets"])
+
+
+@router.post("/offline")
+async def set_offline_budgets_batch(
+    session: SessionDep, budgets_base: List[BudgetBase]
+) -> List[Budget]:
+    return create_offline_budgets_batch(session=session, budgets_base=budgets_base)
 
 
 @router.post("")

@@ -44,7 +44,7 @@ def create_category(
 
 def create_offline_categories_batch(
     session: SessionDep, categories_base: CategoryBase
-) -> Optional[Category]:
+) -> List[Category]:
     categories: List[Category] = []
     try:
         for category_base in categories_base:
