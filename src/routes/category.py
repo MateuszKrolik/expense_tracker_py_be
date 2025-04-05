@@ -1,8 +1,12 @@
-from typing import Optional
+from typing import List, Optional
 from fastapi import APIRouter, status
 
 from models.category import Category, CategoryBase
-from services.category import create_category, get_all_categories
+from services.category import (
+    create_category,
+    create_offline_categories_batch,
+    get_all_categories,
+)
 from services.database import SessionDep
 
 
@@ -19,3 +23,12 @@ async def create_category_entity(
 @router.get("")
 async def get_categories(session: SessionDep):
     return get_all_categories(session=session)
+
+
+@router.post(path="/offline", status_code=status.HTTP_201_CREATED)
+async def create_offline_categories(
+    session: SessionDep, categories_base: List[CategoryBase]
+) -> List[Category]:
+    return create_offline_categories_batch(
+        session=session, categories_base=categories_base
+    )

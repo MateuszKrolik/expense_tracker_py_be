@@ -22,7 +22,12 @@ def create_category(
     session: SessionDep, category_base: CategoryBase
 ) -> Optional[Category]:
     category = None
-    _check_for_existing_category(session=session, category_base=category_base)
+    exists = _check_for_existing_category(session=session, category_base=category_base)
+    if exists:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Category with given name already exists.",
+        )
     try:
         category = Category(**category_base.model_dump())
         session.add(category)
@@ -37,7 +42,35 @@ def create_category(
     return category
 
 
-def _check_for_existing_category(session: SessionDep, category_base: CategoryBase):
+def create_offline_categories_batch(
+    session: SessionDep, categories_base: CategoryBase
+) -> Optional[Category]:
+    categories: List[Category] = []
+    try:
+        for category_base in categories_base:
+            exists = _check_for_existing_category(
+                session=session, category_base=category_base
+            )
+            if exists or not category_base.is_offline:
+                continue
+            category = Category(**category_base.model_dump())
+            session.add(category)
+            categories.append(category)
+        session.commit()
+        for category in categories:
+            session.refresh(category)
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+    return categories
+
+
+def _check_for_existing_category(
+    session: SessionDep, category_base: CategoryBase
+) -> Optional[bool]:
     existing = None
     try:
         existing = session.exec(
@@ -48,8 +81,4 @@ def _check_for_existing_category(session: SessionDep, category_base: CategoryBas
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
 
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Category with given name already exists.",
-        )
+    return existing is not None

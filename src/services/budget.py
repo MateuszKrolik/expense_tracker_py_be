@@ -7,12 +7,7 @@ from services.database import SessionDep
 
 def set_budget_for_given_month(session: SessionDep, budget_base: BudgetBase):
     result: Optional[Budget] = None
-    exists, _ = _check_for_existing_budget(session=session, budget_base=budget_base)
-    if exists:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Budget already exists for: {budget_base.month}/{budget_base.year}.",
-        )
+    _check_for_existing_budget(session=session, budget_base=budget_base)
     try:
         budget = Budget(**budget_base.model_dump())
         budget.remaining_budget = budget.max_budget
@@ -41,8 +36,11 @@ def _check_for_existing_budget(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         )
-
-    return existing is not None, existing
+    if existing is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Budget already exists for: {budget_base.month}/{budget_base.year}.",
+        )
 
 
 def get_budget_for_given_month(
