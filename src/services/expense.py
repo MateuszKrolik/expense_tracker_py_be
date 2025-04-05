@@ -20,7 +20,7 @@ def save_expense_after_successful_validation(
             detail="Category not found, either pick from available or create one.",
         )
     budget = get_budget_for_given_month(
-        session=session, year=expense.date.year, month=expense.date.month
+        session=session, year=expense.timestamp.year, month=expense.timestamp.month
     )
     budget_after_expense = budget.remaining_budget - expense.amount
     if budget_after_expense < 0:
@@ -52,10 +52,14 @@ def _save_expense(session: SessionDep, expense: Expense) -> Optional[Expense]:
 
 
 def get_all_expenses(
-    session: SessionDep, name_query: Optional[str] = Query(None)
+    session: SessionDep,
+    category_id: Optional[UUID] = Query(None),
+    name_query: Optional[str] = Query(None),
 ) -> List[Expense]:
     try:
         query = select(Expense)
+        if category_id is not None:
+            query = query.where(Expense.category_id == category_id)
         if name_query is not None:
             query = query.where(cast(Expense.name, String).ilike(f"%{name_query}%"))
         return session.exec(query).all()
@@ -97,3 +101,36 @@ def get_all_expenses_for_category_id(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )
+
+
+def save_offline_expenses_batch(
+    session: SessionDep, expenses_base: List[ExpenseBase]
+) -> List[Expense]:
+    if _are_expenses_offline(expenses_base=expenses_base) is not True:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Attempted to post online entity for offline batch endpoint.",
+        )
+    expenses: List[Expense] = []
+    try:
+        for expense_base in expenses_base:
+            expense = Expense(**expense_base.model_dump())
+            session.add(expense)
+            expenses.append(expense)
+        session.commit()
+        for expense in expenses:
+            session.refresh(expense)
+    except Exception as e:
+        session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
+
+    return expenses
+
+
+def _are_expenses_offline(expenses_base: List[ExpenseBase]) -> List[Expense]:
+    for expense_base in expenses_base:
+        if expense_base.is_offline is not True:
+            return False
+    return True

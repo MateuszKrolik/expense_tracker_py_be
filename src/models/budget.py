@@ -11,9 +11,10 @@ class BudgetBase(SQLModel):
     month: int = Field(
         ge=1, le=12, description="Month must be between 1-12.", index=True
     )
-    remaining_budget: float = Field(default=0.0, ge=0)
     max_budget: float = Field(gt=0)
+    is_offline: bool = Field(default=False)
 
 
 class Budget(BudgetBase, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
+    remaining_budget: float = Field(default=0.0, ge=0)

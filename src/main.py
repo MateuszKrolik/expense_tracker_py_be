@@ -1,55 +1,22 @@
-from typing import List, Optional
-from uuid import UUID
+from typing import Optional
 import uvicorn
-from fastapi import FastAPI, Query, status
+from fastapi import FastAPI, status
 
 from models.budget import Budget, BudgetBase
-from models.expense import Expense, ExpenseBase
 from models.category import Category as CategoryModel, CategoryBase
 from services.budget import get_budget_for_given_month, set_budget_for_given_month
+from routes.expense import router as expense_routes
 from services.category import create_category, get_all_categories
 from services.database import SessionDep, create_db_and_tables
-from services.expense import (
-    get_all_expenses,
-    get_all_expenses_for_category_id,
-    get_single_expense_by_id,
-    save_expense_after_successful_validation,
-)
 
 app = FastAPI()
+
+app.include_router(expense_routes)
 
 
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
-
-
-@app.post(path="/expenses", status_code=status.HTTP_201_CREATED)
-async def save_expense(session: SessionDep, expense_base: ExpenseBase) -> Expense:
-    return save_expense_after_successful_validation(
-        session=session, expense_base=expense_base
-    )
-
-
-@app.get("/expenses")
-async def get_expenses(
-    session: SessionDep, name_query: Optional[str] = Query(None)
-) -> List[Expense]:
-    return get_all_expenses(session=session, name_query=name_query)
-
-
-@app.get("/expenses/{expense_id}")
-async def get_expense_by_id(session: SessionDep, expense_id: UUID):
-    return get_single_expense_by_id(session=session, expense_id=expense_id)
-
-
-@app.get("/categories/{category_id}/expenses")
-async def get_expenses_by_category_id(
-    session: SessionDep, category_id: UUID, name_query: Optional[str] = Query(None)
-) -> List[Expense]:
-    return get_all_expenses_for_category_id(
-        session=session, category_id=category_id, name_query=name_query
-    )
 
 
 @app.post(path="/categories", status_code=status.HTTP_201_CREATED)
