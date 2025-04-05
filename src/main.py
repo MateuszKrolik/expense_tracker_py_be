@@ -1,7 +1,7 @@
 from typing import List, Optional
 from uuid import UUID
 import uvicorn
-from fastapi import FastAPI, status
+from fastapi import FastAPI, Query, status
 
 from models.budget import Budget, BudgetBase
 from models.expense import Expense, ExpenseBase
@@ -32,8 +32,10 @@ async def save_expense(session: SessionDep, expense_base: ExpenseBase) -> Expens
 
 
 @app.get("/expenses")
-async def get_expenses(session: SessionDep):
-    return get_all_expenses(session=session)
+async def get_expenses(
+    session: SessionDep, name_query: Optional[str] = Query(None)
+) -> List[Expense]:
+    return get_all_expenses(session=session, name_query=name_query)
 
 
 @app.get("/expenses/{expense_id}")

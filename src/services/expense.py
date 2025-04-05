@@ -3,9 +3,9 @@ from uuid import UUID
 from models.category import Category
 from models.expense import Expense, ExpenseBase
 from services.budget import get_budget_for_given_month
-from fastapi import status, HTTPException
+from fastapi import Query, status, HTTPException
 from services.database import SessionDep
-from sqlmodel import select
+from sqlmodel import String, cast, select
 
 
 def save_expense_after_successful_validation(
@@ -51,9 +51,14 @@ def _save_expense(session: SessionDep, expense: Expense) -> Optional[Expense]:
     return result
 
 
-def get_all_expenses(session: SessionDep) -> List[Expense]:
+def get_all_expenses(
+    session: SessionDep, name_query: Optional[str] = Query(None)
+) -> List[Expense]:
     try:
-        return session.exec(select(Expense)).all()
+        query = select(Expense)
+        if name_query is not None:
+            query = query.where(cast(Expense.name, String).ilike(f"%{name_query}%"))
+        return session.exec(query).all()
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
