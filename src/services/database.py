@@ -24,12 +24,11 @@ SessionDep = Annotated[AsyncSession, Depends(get_session)]
 
 async def seed_dummy_users() -> List[User]:
     users: List[User] = []
-    async with AsyncSession(engine) as session:
+    async with AsyncSession(engine, expire_on_commit=False) as session:
         try:
             for _, fake_user in fake_users_db.items():
                 user = User(**fake_user)
-                await session.merge(user)
-                session.refresh(user)
+                user = await session.merge(user)
                 users.append(user)
             await session.commit()
         except Exception as e:
