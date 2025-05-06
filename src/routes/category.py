@@ -1,6 +1,7 @@
 from typing import List, Optional
 from fastapi import APIRouter, status
 
+from dtos.paged_response import PagedResponse
 from models.category import Category, CategoryBase
 from services.category import (
     create_category,
@@ -21,7 +22,7 @@ async def create_category_entity(
 
 
 @router.get("")
-async def get_categories(session: SessionDep):
+async def get_categories(session: SessionDep) -> PagedResponse[Category]:
     return get_all_categories(session=session)
 
 

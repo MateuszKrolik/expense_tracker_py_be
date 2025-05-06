@@ -4,3 +4,8 @@ pydantic
 uvicorn
 sqlmodel
 sqlalchemy
+# auth
+python-multipart
+# async
+aiosqlite
+greenlet

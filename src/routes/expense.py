@@ -2,6 +2,7 @@ from typing import List, Optional
 from uuid import UUID
 from fastapi import APIRouter, Query, status
 
+from dtos.paged_response import PagedResponse
 from models.expense import Expense, ExpenseBase
 from services.database import SessionDep
 from services.expense import (
@@ -27,7 +28,7 @@ async def get_expenses(
     session: SessionDep,
     category_id: Optional[UUID] = Query(None),
     name_query: Optional[str] = Query(None),
-) -> List[Expense]:
+) -> PagedResponse[Expense]:
     return get_all_expenses(
         session=session, category_id=category_id, name_query=name_query
     )
