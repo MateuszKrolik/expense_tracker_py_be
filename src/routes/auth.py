@@ -2,7 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from models.user import User
-from services.auth import get_current_user
+from services.auth import get_current_active_user
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -10,6 +10,6 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.get("/me")
 async def read_users_me(
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[User, Depends(get_current_active_user)],
 ) -> User:
     return current_user
