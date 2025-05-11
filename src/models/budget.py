@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import uuid4, UUID
 from datetime import datetime
 
@@ -13,7 +14,7 @@ class BudgetBase(SQLModel):
     )
     max_budget: float = Field(gt=0, index=True)
     is_offline: bool = Field(default=False, index=True)
-    owner: str = Field(index=True)
+    owner: Optional[str] = Field(default=None, foreign_key="user.username")
 
 
 class Budget(BudgetBase, table=True):
