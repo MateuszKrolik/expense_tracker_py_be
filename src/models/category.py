@@ -6,7 +6,7 @@ from sqlmodel import SQLModel, Field
 
 class CategoryBase(SQLModel):
     name: str = Field(index=True)
-    is_offline: bool = Field(default=False)
+    is_offline: bool = Field(default=False, index=True)
 
 
 class Category(CategoryBase, table=True):

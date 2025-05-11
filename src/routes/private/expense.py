@@ -12,6 +12,7 @@ from services.expense import (
     get_single_expense_by_id,
     save_expense_after_successful_validation,
     save_offline_expenses_batch,
+    share_expense,
 )
 
 
@@ -53,6 +54,17 @@ async def get_expense_by_id(
     expense_id: UUID,
 ):
     return await get_single_expense_by_id(
+        session=session, current_user=current_user, expense_id=expense_id
+    )
+
+
+@router.patch("/{expense_id}/share", response_model=Expense)
+async def share_expense_endpoint(
+    session: SessionDep,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    expense_id: UUID,
+):
+    return await share_expense(
         session=session, current_user=current_user, expense_id=expense_id
     )
 

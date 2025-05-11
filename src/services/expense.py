@@ -14,7 +14,7 @@ from services.auth import get_current_active_user
 from services.budget import get_budget_for_given_month
 from fastapi import Depends, Query, status, HTTPException
 from services.database import SessionDep
-from sqlmodel import String, cast, func, select
+from sqlmodel import String, cast, func, or_, select
 
 
 @command_exception_handler
@@ -22,6 +22,7 @@ async def save_expense_after_successful_validation(
     session: SessionDep, current_user: User, expense_base: ExpenseBase
 ) -> Optional[Expense]:
     expense = Expense(**expense_base.model_dump())
+    expense.owner = current_user.username
     category = await session.get(Category, expense.category_id)
     if not category:
         raise HTTPException(
@@ -68,7 +69,7 @@ async def get_all_expenses(
 
 @query_exception_handler
 async def get_single_expense_by_id(
-    session: SessionDep, current_user: User, expense_id: UUID
+    session: SessionDep, current_user: User, expense_id: UUID, is_public: bool = False
 ) -> Optional[Expense]:
     expense = await session.get(Expense, expense_id)
     if not expense:
@@ -76,11 +77,12 @@ async def get_single_expense_by_id(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Expense not found.",
         )
-    if expense.owner != current_user.username:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="This expense doesn't belong to you.",
-        )
+    if not is_public:
+        if expense.owner != current_user.username:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This expense doesn't belong to you.",
+            )
 
     return expense
 
@@ -129,3 +131,52 @@ async def _save_expense(session: SessionDep, expense: Expense) -> Optional[Expen
     await session.commit()
     await session.refresh(expense)
     return expense
+
+
+@command_exception_handler
+async def share_expense(
+    session: SessionDep,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    expense_id: UUID,
+):
+    expense = await get_single_expense_by_id(
+        session=session,
+        current_user=current_user,
+        expense_id=expense_id,
+        is_public=True,
+    )
+    if not expense:
+        raise HTTPException(status_code=404, detail="Expense not found")
+    expense.is_public = True
+    session.add(expense)
+    await session.commit()
+    await session.refresh(expense)
+
+    return expense
+
+
+@query_exception_handler
+async def get_all_public_expenses(
+    session: SessionDep,
+    category_id: Optional[UUID] = Query(None),
+    query: Optional[str] = Query(None, description="Query by expense name or username"),
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+) -> PagedResponse[Expense]:
+    sql_query = select(Expense).where(Expense.is_public)
+    if category_id is not None:
+        sql_query = sql_query.where(Expense.category_id == category_id)
+    if query is not None:
+        sql_query = sql_query.where(
+            or_(
+                cast(Expense.name, String).ilike(f"%{query}%"),
+                cast(Expense.owner, String).ilike(f"%{query}%"),
+            )
+        )
+    items = (await session.exec(sql_query.offset(offset).limit(limit))).all()
+    total_count = (
+        await session.exec(select(func.count()).select_from(sql_query))
+    ).one()
+    return PagedResponse[Expense](
+        items=items, offset=offset, limit=limit, total_count=total_count
+    )
