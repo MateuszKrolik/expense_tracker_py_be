@@ -11,4 +11,4 @@ class CategoryBase(SQLModel):
 
 class Category(CategoryBase, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    owner: Optional[str] = Field(default=None, foreign_key="user.username")
+    owner: Optional[str] = Field(default=None, foreign_key="user.username", index=True)

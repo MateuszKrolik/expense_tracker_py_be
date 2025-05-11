@@ -14,9 +14,9 @@ class BudgetBase(SQLModel):
     )
     max_budget: float = Field(gt=0, index=True)
     is_offline: bool = Field(default=False, index=True)
-    owner: Optional[str] = Field(default=None, foreign_key="user.username")
 
 
 class Budget(BudgetBase, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     remaining_budget: float = Field(default=0.0, ge=0, index=True)
+    owner: Optional[str] = Field(default=None, foreign_key="user.username", index=True)

@@ -9,15 +9,17 @@ from dtos.paged_response import PagedResponse
 from models.budget import Budget
 from models.category import Category
 from models.expense import Expense, ExpenseBase
+from models.user import User
+from services.auth import get_current_active_user
 from services.budget import get_budget_for_given_month
-from fastapi import Query, status, HTTPException
+from fastapi import Depends, Query, status, HTTPException
 from services.database import SessionDep
 from sqlmodel import String, cast, func, select
 
 
 @command_exception_handler
 async def save_expense_after_successful_validation(
-    session: SessionDep, expense_base: ExpenseBase
+    session: SessionDep, current_user: User, expense_base: ExpenseBase
 ) -> Optional[Expense]:
     expense = Expense(**expense_base.model_dump())
     category = await session.get(Category, expense.category_id)
@@ -26,8 +28,13 @@ async def save_expense_after_successful_validation(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Category not found, either pick from available or create one.",
         )
+    if category.owner != current_user.username:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This category doesn't belong to you.",
+        )
     decremented_budget = await _decrement_budget_if_possible_and_return_after(
-        session=session, expense=expense
+        session=session, current_user=current_user, expense=expense
     )
     if not decremented_budget:
         raise HTTPException(
@@ -41,12 +48,13 @@ async def save_expense_after_successful_validation(
 @query_exception_handler
 async def get_all_expenses(
     session: SessionDep,
+    current_user: Annotated[User, Depends(get_current_active_user)],
     category_id: Optional[UUID] = Query(None),
     name_query: Optional[str] = Query(None),
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
 ) -> PagedResponse[Expense]:
-    query = select(Expense)
+    query = select(Expense).where(Expense.owner == current_user.username)
     if category_id is not None:
         query = query.where(Expense.category_id == category_id)
     if name_query is not None:
@@ -60,7 +68,7 @@ async def get_all_expenses(
 
 @query_exception_handler
 async def get_single_expense_by_id(
-    session: SessionDep, expense_id: UUID
+    session: SessionDep, current_user: User, expense_id: UUID
 ) -> Optional[Expense]:
     expense = await session.get(Expense, expense_id)
     if not expense:
@@ -68,47 +76,26 @@ async def get_single_expense_by_id(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Expense not found.",
         )
+    if expense.owner != current_user.username:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This expense doesn't belong to you.",
+        )
 
     return expense
 
 
-@query_exception_handler
-async def get_all_expenses_for_category_id(
-    session: SessionDep,
-    category_id: UUID,
-    name_query: Optional[str] = Query(None),
-    offset: int = 0,
-    limit: Annotated[int, Query(le=100)] = 100,
-) -> PagedResponse[Expense]:
-    category = await session.get(Category, category_id)
-    if not category:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
-        )
-    query = select(Expense)
-    if name_query is not None:
-        query = query.where(cast(Expense.name, String).ilike(f"%{name_query}%"))
-    items = (
-        await session.exec(
-            query.where(Expense.category_id == category_id).offset(offset).limit(limit)
-        )
-    ).all()
-    total_count = (await session.exec(select(func.count()).select_from(query))).one()
-    return PagedResponse[Expense](
-        items=items, offset=offset, limit=limit, total_count=total_count
-    )
-
-
 @command_exception_handler
 async def save_offline_expenses_batch(
-    session: SessionDep, expenses_base: List[ExpenseBase]
+    session: SessionDep, current_user: User, expenses_base: List[ExpenseBase]
 ) -> List[Expense]:
     expenses: List[Expense] = []
     for expense_base in expenses_base:
         expense = Expense(**expense_base.model_dump())
+        expense.owner = current_user.username
         category = await session.get(Category, expense.category_id)
         decremented_budget = await _decrement_budget_if_possible_and_return_after(
-            session=session, expense=expense
+            session=session, current_user=current_user, expense=expense
         )
         if category is None or decremented_budget is None:
             continue
@@ -121,10 +108,13 @@ async def save_offline_expenses_batch(
 
 
 async def _decrement_budget_if_possible_and_return_after(
-    session: SessionDep, expense: Expense
+    session: SessionDep, current_user: User, expense: Expense
 ) -> Optional[Budget]:
     budget = await get_budget_for_given_month(
-        session=session, year=expense.timestamp.year, month=expense.timestamp.month
+        session=session,
+        current_user=current_user,
+        year=expense.timestamp.year,
+        month=expense.timestamp.month,
     )
     budget_after_expense = budget.remaining_budget - expense.amount
     if budget is None or budget_after_expense < 0:
@@ -133,6 +123,7 @@ async def _decrement_budget_if_possible_and_return_after(
     return budget
 
 
+@command_exception_handler
 async def _save_expense(session: SessionDep, expense: Expense) -> Optional[Expense]:
     session.add(expense)
     await session.commit()

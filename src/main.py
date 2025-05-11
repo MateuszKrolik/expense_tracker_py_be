@@ -1,10 +1,9 @@
 import uvicorn
 from fastapi import FastAPI
 
-from routes.budget import router as budget_routes
-from routes.expense import router as expense_routes
 from routes.private.user import router as user_routes
 from routes.public.token import router as token_routes
+from routes.public.auth import router as auth_routes
 from services.database import create_db_and_tables, seed_dummy_users
 import tracemalloc
 
@@ -15,8 +14,7 @@ app = FastAPI()
 
 app.include_router(user_routes)
 app.include_router(token_routes)
-app.include_router(budget_routes)
-app.include_router(expense_routes)
+app.include_router(auth_routes)
 
 
 @app.on_event("startup")
