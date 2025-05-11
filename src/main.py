@@ -7,6 +7,9 @@ from routes.expense import router as expense_routes
 from routes.auth import router as auth_routes
 from routes.token import router as token_routes
 from services.database import create_db_and_tables, seed_dummy_users
+import tracemalloc
+
+tracemalloc.start()  # detailed logs of not awaited coroutines
 
 app = FastAPI()
 

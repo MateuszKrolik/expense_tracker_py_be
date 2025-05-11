@@ -1,42 +1,51 @@
+import jwt
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 from decorators.db_exception_handlers import query_exception_handler
 from models.user import User
-from services.database import SessionDep, engine
+from services.database import engine
+from services.password import verify_password
+from dtos.token import TokenData
+
+# TODO: Remove hardcoding
+SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+ALGORITHM = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 @query_exception_handler
-async def get_user(session: SessionDep, username: str):
-    user = await session.get(User, username)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Expense not found.",
-        )
-
-    return user
-
-
-async def fake_decode_token(token):
-    # This doesn't provide any security at all
-    # Check the next version
+async def get_user(username: str):
     async with AsyncSession(engine) as session:
-        user = await get_user(session, token)
+        user = await session.get(User, username)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Expense not found.",
+            )
         return user
 
 
 async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)]):
-    user = await fake_decode_token(token)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except jwt.InvalidTokenError:
+        raise credentials_exception
+    user = await get_user(username=token_data.username)
+    if user is None:
+        raise credentials_exception
     return user
 
 
@@ -48,5 +57,21 @@ async def get_current_active_user(
     return current_user
 
 
-def fake_hash_password(password: str):
-    return "fakehashed" + password
+async def authenticate_user(fake_db, username: str, password: str):
+    user = await get_user(fake_db, username)
+    if not user:
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
+
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
