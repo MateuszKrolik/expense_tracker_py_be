@@ -1,5 +1,6 @@
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from routes.private.user import router as user_routes
 from routes.public.token import router as token_routes
@@ -12,6 +13,12 @@ tracemalloc.start()  # detailed logs of not awaited coroutines
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # TODO: Change to .ENV once deployed
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(user_routes)
 app.include_router(token_routes)
