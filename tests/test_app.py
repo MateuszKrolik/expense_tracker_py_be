@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlmodel import SQLModel
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from src.models.category import CategoryBase
 from src.models.user import User
 from src.main import app
 from src.services.password import pwd_context
