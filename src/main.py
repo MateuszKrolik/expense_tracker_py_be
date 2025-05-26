@@ -29,8 +29,9 @@ app.include_router(public_expense_router)
 @app.on_event("startup")
 async def on_startup():
     await create_db_and_tables()
-    for dummy_user in await seed_dummy_users():
-        print(dummy_user.model_dump())
+    await seed_dummy_users()
+    # for dummy_user in await seed_dummy_users():
+    #     print(dummy_user.model_dump())
 
 
 if __name__ == "__main__":

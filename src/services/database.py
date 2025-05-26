@@ -12,7 +12,7 @@ sqlite_file_name = "database.db"
 sqlite_url = f"sqlite+aiosqlite:///{sqlite_file_name}"
 
 connect_args = {"check_same_thread": False}
-engine = create_async_engine(sqlite_url, connect_args=connect_args, echo=True)
+engine = create_async_engine(sqlite_url, connect_args=connect_args, echo=False)
 
 
 async def get_session():

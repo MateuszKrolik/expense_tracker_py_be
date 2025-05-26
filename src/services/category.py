@@ -76,7 +76,7 @@ async def _check_for_existing_category(
     current_user: User,
 ) -> Optional[bool]:
     return (
-        await session.exec(
+        await session.execute(
             select(Category).where(
                 Category.name == category_base.name,
                 Category.owner == current_user.username,

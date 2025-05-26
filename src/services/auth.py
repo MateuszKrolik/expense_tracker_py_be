@@ -24,7 +24,7 @@ async def get_user(username: str):
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Expense not found.",
+                detail="User not found.",
             )
         return user
 
