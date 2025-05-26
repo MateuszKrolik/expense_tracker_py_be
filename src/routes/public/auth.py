@@ -29,7 +29,7 @@ async def signup(
 ):
     if await session.get(User, user_base.username):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Username already exists"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="User already exists."
         )
     user = User(**user_base.model_dump(), hashed_password=pwd_context.hash(password))
     session.add(user)
