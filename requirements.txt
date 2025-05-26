@@ -11,3 +11,5 @@ greenlet
 python-multipart
 pyjwt
 passlib[bcrypt]
+# testing
+pytest

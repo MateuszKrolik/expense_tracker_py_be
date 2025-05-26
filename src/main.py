@@ -2,11 +2,11 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routes.private.user import router as user_routes
-from routes.public.token import router as token_routes
-from routes.public.auth import router as auth_routes
-from routes.public.expense import router as public_expense_router
-from services.database import create_db_and_tables, seed_dummy_users
+from src.routes.private.user import router as user_routes
+from src.routes.public.token import router as token_routes
+from src.routes.public.auth import router as auth_routes
+from src.routes.public.expense import router as public_expense_router
+from src.services.database import create_db_and_tables, seed_dummy_users
 import tracemalloc
 
 tracemalloc.start()  # detailed logs of not awaited coroutines

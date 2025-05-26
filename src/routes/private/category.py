@@ -1,16 +1,16 @@
 from typing import Annotated, List, Optional
 from fastapi import APIRouter, Depends, Query, status
 
-from dtos.paged_response import PagedResponse
-from models.category import Category, CategoryBase
-from models.user import User
-from services.auth import get_current_active_user
-from services.category import (
+from src.dtos.paged_response import PagedResponse
+from src.models.category import Category, CategoryBase
+from src.models.user import User
+from src.services.auth import get_current_active_user
+from src.services.category import (
     create_category,
     create_offline_categories_batch,
     get_all_categories,
 )
-from services.database import SessionDep
+from src.services.database import SessionDep
 
 
 router = APIRouter(prefix="/categories", tags=["categories"])

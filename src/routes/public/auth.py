@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, status
-from decorators.db_exception_handlers import command_exception_handler
-from models.user import User, UserBase
-from services.database import SessionDep
-from services.password import pwd_context
+from src.decorators.db_exception_handlers import command_exception_handler
+from src.models.user import User, UserBase
+from src.services.database import SessionDep
+from src.services.password import pwd_context
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])

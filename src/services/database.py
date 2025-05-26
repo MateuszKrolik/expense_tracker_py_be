@@ -3,10 +3,10 @@ from fastapi import Depends
 from sqlmodel import SQLModel
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel.ext.asyncio.session import AsyncSession
-from data.dummy_users import fake_users_db
+from src.data.dummy_users import fake_users_db
 
-from decorators.db_exception_handlers import command_exception_handler
-from models.user import User
+from src.decorators.db_exception_handlers import command_exception_handler
+from src.models.user import User
 
 sqlite_file_name = "database.db"
 sqlite_url = f"sqlite+aiosqlite:///{sqlite_file_name}"

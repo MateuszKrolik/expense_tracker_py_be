@@ -1,15 +1,15 @@
 from typing import Annotated, List, Optional
 
 from fastapi import APIRouter, Depends
-from models.user import User
-from services.auth import get_current_active_user
-from services.budget import (
+from src.models.user import User
+from src.services.auth import get_current_active_user
+from src.services.budget import (
     create_offline_budgets_batch,
     get_budget_for_given_month,
     set_budget_for_given_month,
 )
-from services.database import SessionDep
-from models.budget import Budget, BudgetBase
+from src.services.database import SessionDep
+from src.models.budget import Budget, BudgetBase
 
 
 router = APIRouter(prefix="/budgets", tags=["budgets"])

@@ -2,12 +2,12 @@ from typing import Annotated, List, Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 
-from dtos.paged_response import PagedResponse
-from models.expense import Expense, ExpenseBase
-from models.user import User
-from services.auth import get_current_active_user
-from services.database import SessionDep
-from services.expense import (
+from src.dtos.paged_response import PagedResponse
+from src.models.expense import Expense, ExpenseBase
+from src.models.user import User
+from src.services.auth import get_current_active_user
+from src.services.database import SessionDep
+from src.services.expense import (
     get_all_expenses,
     get_single_expense_by_id,
     save_expense_after_successful_validation,

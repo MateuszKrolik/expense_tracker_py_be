@@ -3,10 +3,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from dtos.token import Token
-from models.user import User
-from services.auth import create_access_token
-from services.database import SessionDep
+from src.dtos.token import Token
+from src.models.user import User
+from src.services.auth import create_access_token
+from src.services.database import SessionDep
 
 
 router = APIRouter(prefix="/token", tags=["token"])

@@ -2,10 +2,10 @@ from typing import Annotated, Optional
 from uuid import UUID
 from fastapi import APIRouter, Query
 
-from dtos.paged_response import PagedResponse
-from models.expense import Expense
-from services.database import SessionDep
-from services.expense import get_all_public_expenses
+from src.dtos.paged_response import PagedResponse
+from src.models.expense import Expense
+from src.services.database import SessionDep
+from src.services.expense import get_all_public_expenses
 
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
