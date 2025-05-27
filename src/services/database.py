@@ -1,3 +1,4 @@
+import os
 from typing import Annotated, List
 from fastapi import Depends
 from sqlmodel import SQLModel
@@ -8,11 +9,20 @@ from src.data.dummy_users import fake_users_db
 from src.decorators.db_exception_handlers import command_exception_handler
 from src.models.user import User
 
-sqlite_file_name = "database.db"
-sqlite_url = f"sqlite+aiosqlite:///{sqlite_file_name}"
+SQLITE_FILE_NAME = "database.db"
 
-connect_args = {"check_same_thread": False}
-engine = create_async_engine(sqlite_url, connect_args=connect_args, echo=False)
+
+is_docker = os.getenv("IS_DOCKER", "false").lower() == "true"
+
+connect_args = {}
+
+if is_docker:
+    database_url = os.getenv("DATABASE_URL")
+else:
+    database_url = f"sqlite+aiosqlite:///{SQLITE_FILE_NAME}"
+    connect_args["check_same_thread"] = False
+
+engine = create_async_engine(database_url, connect_args=connect_args, echo=False)
 
 
 async def get_session():

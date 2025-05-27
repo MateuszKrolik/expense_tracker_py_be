@@ -1,3 +1,4 @@
+import os
 import jwt
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
@@ -10,8 +11,13 @@ from src.services.database import engine
 from src.services.password import verify_password
 from src.dtos.token import TokenData
 
-# TODO: Remove hardcoding
-SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
+os.getenv("IS_DOCKER", "false")
+
+SECRET_KEY = os.getenv(
+    "SECRET_KEY",
+    # local fallback (differs in prod env)
+    "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7",
+)
 ALGORITHM = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
