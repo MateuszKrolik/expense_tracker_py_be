@@ -57,3 +57,6 @@ steps:
 # Store images in Google Artifact Registry
 images:
   - europe-west1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/mkrolik-expense-tracker:latest
+
+options:
+  logging: CLOUD_LOGGING_ONLY
