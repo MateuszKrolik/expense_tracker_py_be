@@ -10,7 +10,6 @@ from sqlmodel import SQLModel
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from src.models.user import User
-from src.models.category import Category
 from src.main import app
 from src.services.password import pwd_context
 from src.services.database import get_session as get_session_original
@@ -23,7 +22,12 @@ sqlite_url = f"sqlite+aiosqlite:///{temp_db.name}"
 
 connect_args = {"check_same_thread": False}
 
-engine = create_async_engine(sqlite_url, connect_args=connect_args, echo=False)
+engine = create_async_engine(
+    sqlite_url,
+    connect_args=connect_args,
+    # debug logging
+    echo=True,
+)
 
 
 async def get_session():
@@ -116,6 +120,17 @@ async def test_signup_validation(async_client):
 
 @pytest.mark.asyncio
 async def test_create_category(async_client, auth_token):
+    #
+    async with AsyncSession(engine) as session:
+        from sqlalchemy import text
+
+        try:
+            users = await session.execute(text("SELECT * FROM user"))
+            print(f"DEBUG: Found {users.rowcount} users")
+        except Exception as e:
+            print(f"DEBUG: User table error: {str(e)}")
+            raise
+    #
     category_base = {"name": "random_name", "is_offline": False}
     response = await async_client.post(
         url="/users/me/categories",
