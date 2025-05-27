@@ -117,8 +117,8 @@ async def test_signup_validation(async_client):
 @pytest.mark.asyncio
 async def test_create_category(async_client, auth_token):
     #
-    User.update_forward_refs(Category=Category)
-    Category.update_forward_refs(User=User)
+    User.model_rebuild()
+    Category.model_rebuild()
     #
     category_base = {"name": "random_name", "is_offline": False}
     response = await async_client.post(
