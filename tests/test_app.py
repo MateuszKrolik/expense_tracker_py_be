@@ -10,6 +10,7 @@ from sqlmodel import SQLModel
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from src.models.user import User
+from src.models.category import Category
 from src.main import app
 from src.services.password import pwd_context
 from src.services.database import get_session as get_session_original
@@ -44,7 +45,6 @@ async def async_client():
 async def setup_and_teardown_db():
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
-        await conn.run_sync(User.metadata.create_all, conn)
         await conn.run_sync(SQLModel.metadata.create_all)
 
     async with AsyncSession(engine) as session:
@@ -116,6 +116,10 @@ async def test_signup_validation(async_client):
 
 @pytest.mark.asyncio
 async def test_create_category(async_client, auth_token):
+    #
+    User.update_forward_refs(Category=Category)
+    Category.update_forward_refs(User=User)
+    #
     category_base = {"name": "random_name", "is_offline": False}
     response = await async_client.post(
         url="/users/me/categories",
