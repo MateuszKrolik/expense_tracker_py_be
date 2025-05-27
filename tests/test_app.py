@@ -50,6 +50,7 @@ async def setup_and_teardown_db():
         user = User(**fake_users_db["johndoe"])
         session.add(user)
         await session.commit()
+        await session.refresh(user)
 
     yield
 
