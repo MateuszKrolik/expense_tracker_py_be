@@ -44,6 +44,7 @@ async def async_client():
 async def setup_and_teardown_db():
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
+        await conn.run_sync(User.metadata.create_all, conn)
         await conn.run_sync(SQLModel.metadata.create_all)
 
     async with AsyncSession(engine) as session:
