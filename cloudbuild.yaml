@@ -19,6 +19,8 @@ steps:
         "europe-west1-docker.pkg.dev/${PROJECT_ID}/${_ARTIFACT_REGISTRY_REPO}/mkrolik-expense-tracker:latest",
         ".",
       ]
+    env:
+      - "DOCKER_BUILDKIT=1"
 
   # Docker push to Google Artifact Registry
   - name: "gcr.io/cloud-builders/docker"
