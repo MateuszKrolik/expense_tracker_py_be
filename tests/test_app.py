@@ -15,10 +15,11 @@ from src.services.password import pwd_context
 from src.services.database import get_session as get_session_original
 from src.data.dummy_users import fake_users_db
 
-import tempfile
+# import tempfile
 
-temp_db = tempfile.NamedTemporaryFile(suffix=".db")
-sqlite_url = f"sqlite+aiosqlite:///{temp_db.name}"
+# temp_db = tempfile.NamedTemporaryFile(suffix=".db")
+# sqlite_url = f"sqlite+aiosqlite:///{temp_db.name}"
+sqlite_url = "sqlite+aiosqlite:///:memory:"
 
 connect_args = {"check_same_thread": False}
 
@@ -45,7 +46,7 @@ async def async_client():
         yield ac
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 async def setup_and_teardown_db():
     async with engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.drop_all)
@@ -60,7 +61,7 @@ async def setup_and_teardown_db():
     yield
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def auth_token(async_client):
     response = await async_client.post(
         "/token",
@@ -120,17 +121,6 @@ async def test_signup_validation(async_client):
 
 @pytest.mark.asyncio
 async def test_create_category(async_client, auth_token):
-    #
-    async with AsyncSession(engine) as session:
-        from sqlalchemy import text
-
-        try:
-            users = await session.execute(text("SELECT * FROM user"))
-            print(f"DEBUG: Found {users.rowcount} users")
-        except Exception as e:
-            print(f"DEBUG: User table error: {str(e)}")
-            raise
-    #
     category_base = {"name": "random_name", "is_offline": False}
     response = await async_client.post(
         url="/users/me/categories",
