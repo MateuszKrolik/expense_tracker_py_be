@@ -120,6 +120,7 @@ async def test_create_category(async_client):
             "Authorization": auth_token,
         },
     )
+    print(response.json())
     assert response.status_code == 201
     response = await async_client.post(
         url="/users/me/categories",
