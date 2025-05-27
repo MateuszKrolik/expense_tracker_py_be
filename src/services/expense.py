@@ -1,7 +1,7 @@
 from typing import Annotated, List, Optional
 from uuid import UUID
 
-from fastapi import Depends, Query, status, HTTPException
+from fastapi import Depends, Query, UploadFile, status, HTTPException
 from sqlmodel import String, cast, func, or_, select
 from src.decorators.db_exception_handlers import (
     command_exception_handler,
@@ -15,13 +15,21 @@ from src.models.user import User
 from src.services.auth import get_current_active_user
 from src.services.budget import get_budget_for_given_month
 from src.services.database import SessionDep
+from src.utils.file_upload import upload_to_gcs
 
 
 @command_exception_handler
 async def save_expense_after_successful_validation(
-    session: SessionDep, current_user: User, expense_base: ExpenseBase
+    session: SessionDep,
+    current_user: User,
+    expense_base: ExpenseBase,
+    image: UploadFile | None = None,
 ) -> Optional[Expense]:
     expense = Expense(**expense_base.model_dump())
+    if image:
+        expense.image_url = await upload_to_gcs(
+            file=image, user_id=current_user.username
+        )
     expense.owner = current_user.username
     category = await session.get(Category, expense.category_id)
     if not category:

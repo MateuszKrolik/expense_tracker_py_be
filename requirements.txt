@@ -15,3 +15,5 @@ passlib[bcrypt]
 # testing
 pytest
 pytest-asyncio
+# gcp
+google-cloud-storage

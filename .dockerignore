@@ -33,3 +33,4 @@
 LICENSE
 README.md
 **/*.db #SQLite
+gcp-credentials.json

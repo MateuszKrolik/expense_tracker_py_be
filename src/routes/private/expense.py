@@ -2,6 +2,7 @@ from typing import Annotated, List, Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, Query, status
 
+from src.dtos.expense import ExpenseCreateRequest
 from src.dtos.paged_response import PagedResponse
 from src.models.expense import Expense, ExpenseBase
 from src.models.user import User
@@ -14,6 +15,7 @@ from src.services.expense import (
     save_offline_expenses_batch,
     share_expense,
 )
+from src.utils.file_upload import parse_expense_create_request
 
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
@@ -23,10 +25,13 @@ router = APIRouter(prefix="/expenses", tags=["expenses"])
 async def save_expense(
     session: SessionDep,
     current_user: Annotated[User, Depends(get_current_active_user)],
-    expense_base: ExpenseBase,
+    request: ExpenseCreateRequest = Depends(parse_expense_create_request),
 ) -> Expense:
     return await save_expense_after_successful_validation(
-        session=session, current_user=current_user, expense_base=expense_base
+        session=session,
+        current_user=current_user,
+        expense_base=request.expense_base,
+        image=request.image,
     )
 
 

@@ -17,3 +17,4 @@ class ExpenseBase(SQLModel):
 class Expense(ExpenseBase, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     owner: Optional[str] = Field(default=None, foreign_key="user.username", index=True)
+    image_url: Optional[str] = None
