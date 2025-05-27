@@ -2,6 +2,7 @@ from sqlmodel import SQLModel, Field
 
 
 class UserBase(SQLModel):
+    __tablename__ = "user"  # explicit naming for pipeline
     username: str = Field(primary_key=True)
     email: str = Field(index=True)
     full_name: str = Field(index=True)
