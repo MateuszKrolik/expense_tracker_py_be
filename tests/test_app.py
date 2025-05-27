@@ -19,12 +19,7 @@ sqlite_url = "sqlite+aiosqlite:///:memory:"
 
 connect_args = {"check_same_thread": False}
 
-engine = create_async_engine(
-    sqlite_url,
-    connect_args=connect_args,
-    # SQL debug logging
-    echo=False,
-)
+engine = create_async_engine(sqlite_url, connect_args=connect_args, echo=False)
 
 
 async def get_session():
@@ -57,8 +52,7 @@ async def setup_and_teardown_db():
     yield
 
 
-@pytest_asyncio.fixture
-async def auth_token(async_client):
+async def get_auth_token(async_client):
     response = await async_client.post(
         "/token",
         data={"username": "johndoe", "password": "secret"},
@@ -115,27 +109,27 @@ async def test_signup_validation(async_client):
     assert response.json() == {"detail": "400: User already exists."}
 
 
-# @pytest.mark.asyncio
-# async def test_create_category(async_client, auth_token):
-#     category_base = {"name": "random_name", "is_offline": False}
-#     response = await async_client.post(
-#         url="/users/me/categories",
-#         json=category_base,
-#         headers={
-#             "Authorization": auth_token,
-#         },
-#     )
-#     print(response.json())  # debug log
-#     assert response.status_code == 201
-#     response = await async_client.post(
-#         url="/users/me/categories",
-#         json=category_base,
-#         headers={
-#             "Authorization": auth_token,
-#         },
-#     )
-#     assert response.status_code == 400
-#     assert response.json()["detail"] == "400: Category with given name already exists."
+@pytest.mark.asyncio
+async def test_create_category(async_client):
+    auth_token = await get_auth_token(async_client)
+    category_base = {"name": "random_name", "is_offline": False}
+    response = await async_client.post(
+        url="/users/me/categories",
+        json=category_base,
+        headers={
+            "Authorization": auth_token,
+        },
+    )
+    assert response.status_code == 201
+    response = await async_client.post(
+        url="/users/me/categories",
+        json=category_base,
+        headers={
+            "Authorization": auth_token,
+        },
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "400: Category with given name already exists."
 
 
 # CMD: pytest -s
