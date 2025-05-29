@@ -47,7 +47,7 @@ async def save_expense_after_successful_validation(
     )
     if not decremented_budget:
         raise HTTPException(
-            status_code=status.HTTP_400_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Decrement operation not possible, either the budget doesn't exist or is too low.",
         )
     # completes transaction
