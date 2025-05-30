@@ -52,68 +52,81 @@
 
 #### 1. Tryb offline z synchronizacją:
 
-![alt text](images/1_xyz.jpeg)
+![alt text](images/1_offline_modal.jpeg)
+![alt text](images/2_offline_mode.jpeg)
+![alt text](images/3_offline_sync.jpeg)
+![alt text](images/4_offline_back_online.jpeg)
 
 #### 2. Upublicznianie wydatków:
 
-![alt text](images/2_xyz.jpeg)
+![alt text](images/5_sharing.jpeg)
 
 #### 3. Dodawawnie zdjęć (np. paragonów):
 
-![alt text](images/3_xyz.jpeg)
+![alt text](images/10_image_upload.jpeg)
 
 #### 4. Uwierzytelnianie:
 
-![alt text](images/4_xyz.jpeg)
+![alt text](images/11_auth.jpeg)
 
 #### 5. Kategoryzacja + Wyszukiwanie (Fuzzy search):
 
-![alt text](images/5_xyz.jpeg)
+![alt text](images/9_fuzzy_search.jpeg)
 
 #### 6. Ustalanie budżetu:
 
-![alt text](images/6_xyz.jpeg)
+![alt text](images/6_no_budget.jpeg)
+![alt text](images/7_budget.jpeg)
 
 #### 7. Walidacja:
 
-![alt text](images/7_xyz.png)
+![alt text](images/8_budget_validation.jpeg)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Zbudowane przy uzyciu
 
 <!-- Frameworks -->
+
 - [![FastAPI][FastAPI]][FastAPI-url]
 - [![React Native][React Native]][React Native-url]
 - [![Expo][Expo]][Expo-url]
 - [![Pytest][Pytest]][Pytest-url]
 
 <!-- Programming Languages -->
+
 - [![Python][Python]][Python-url]
 - [![JavaScript][JavaScript]][JavaScript-url]
 
 <!-- Database Technologies -->
+
 - [![PostgreSQL][PostgreSQL]][PostgreSQL-url]
 - [![SQL][SQL]][SQL-url]
 
 <!-- Mobile Platforms -->
+
 - [![Android][Android]][Android-url]
 
 <!-- Cloud Technologies -->
+
 - [![GCP][GCP]][GCP-url]
 
 <!-- Containerization -->
+
 - [![Docker][Docker]][Docker-url]
 - [![Linux/Unix][Linux/Unix]][Linux/Unix-url]
 - [![Bash][Bash]][Bash-url]
 
 <!-- Version Control -->
+
 - [![Git][Git]][Git-url]
 
 <!-- Data Formats -->
+
 - [![YAML][YAML]][YAML-url]
 
 <!-- Environment Configuration -->
+
 - [![.env][.env]][.env-url]
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -129,7 +142,7 @@
 - [x] Tryb offline z synchronizacją danych
 - [x] Asynchroniczność z modułami asyncio i asyncpg
 - [x] Testy integracyjne (asynchroniczne)
-- [x] Architektura FaaS (Serverless) z serwisami GCP Cloud Run i Neon PostgreSQL       
+- [x] Architektura FaaS (Serverless) z serwisami GCP Cloud Run i Neon PostgreSQL
 
 See the [open issues](https://github.com/MateuszKrolik/WordPress_Cafe_Negrar/issues) for a full list of proposed features (and known issues).
 
