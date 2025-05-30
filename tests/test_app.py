@@ -212,3 +212,29 @@ async def test_unauthorized_create_category(async_client):
     assert response.status_code == 401
     assert response.json()["detail"] == "Not authenticated"
 
+############### TEST DODANIE KATEGORRI O ISTNIEJACEJ NAZWIE ###############
+
+@pytest.mark.asyncio
+async def test_create_duplicate_category(async_client):
+    auth_token = await get_auth_token(async_client)
+
+    payload = {"name": "UnikalnaKategoria", "is_offline": False}
+    # dodajemy kategorię 1szy raz
+    response1 = await async_client.post(
+        "/users/me/categories",
+        json=payload,
+        headers={"Authorization": auth_token}
+    )
+    assert response1.status_code == 201
+
+    # dodajemy kat. o tej samej nazwie jeszcze raz
+    response2 = await async_client.post(
+        "/users/me/categories",
+        json=payload,
+        headers={"Authorization": auth_token}
+    )
+    print("DEBUG status:", response2.status_code)
+    print("DEBUG body:", response2.text)
+
+    assert response2.status_code == 400
+    assert "already exists" in response2.text.lower()
