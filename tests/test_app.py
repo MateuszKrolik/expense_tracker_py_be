@@ -256,3 +256,31 @@ async def test_get_current_user_info(async_client):
     data = response.json()
     assert "username" in data
     assert "email" in data
+
+
+############### TEST ZAPISU I ODCZYTU USERA  ###############
+# dodwanie użytkownika bezpośrednio do bazy + pobranie i sprawdzeniea danych
+
+from sqlmodel import select
+from src.models.user import User
+
+@pytest.mark.asyncio
+async def test_sql_insert_and_query_user():
+    async with AsyncSession(engine) as session:
+        user = User(
+            username="sqltestuser",
+            full_name="SQL Test User",
+            email="sqltestuser@example.com",
+            hashed_password="fakehashedpassword",
+            disabled=False,
+        )
+        session.add(user)
+        await session.commit()
+
+        query = select(User).where(User.username == "sqltestuser")
+        result = await session.execute(query)
+        user_from_db = result.scalar_one_or_none()
+
+        assert user_from_db is not None
+        assert user_from_db.username == "sqltestuser"
+        assert user_from_db.email == "sqltestuser@example.com"
