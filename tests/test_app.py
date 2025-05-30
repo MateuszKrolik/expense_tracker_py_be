@@ -111,28 +111,28 @@ async def test_signup_validation(async_client):
     assert response.json() == {"detail": "400: User already exists."}
 
 
-# @pytest.mark.asyncio
-# async def test_create_category(async_client):
-#     auth_token = await get_auth_token(async_client)
-#     category_base = {"name": "random_name", "is_offline": False}
-#     response = await async_client.post(
-#         url="/users/me/categories",
-#         json=category_base,
-#         headers={
-#             "Authorization": auth_token,
-#         },
-#     )
-#     print(response.json())
-#     assert response.status_code == 201
-#     response = await async_client.post(
-#         url="/users/me/categories",
-#         json=category_base,
-#         headers={
-#             "Authorization": auth_token,
-#         },
-#     )
-#     assert response.status_code == 400
-#     assert response.json()["detail"] == "400: Category with given name already exists."
+@pytest.mark.asyncio
+async def test_create_category(async_client):
+    auth_token = await get_auth_token(async_client)
+    category_base = {"name": "random_name", "is_offline": False}
+    response = await async_client.post(
+        url="/users/me/categories",
+        json=category_base,
+        headers={
+            "Authorization": auth_token,
+        },
+    )
+    print(response.json())
+    assert response.status_code == 201
+    response = await async_client.post(
+        url="/users/me/categories",
+        json=category_base,
+        headers={
+            "Authorization": auth_token,
+        },
+    )
+    assert response.status_code == 400
+    assert response.json()["detail"] == "400: Category with given name already exists."
 
 
 # CMD: pytest -s
