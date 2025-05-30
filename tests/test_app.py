@@ -193,3 +193,22 @@ async def test_unauthorized_access_to_user_info(async_client):
     print("DEBUG status:", response.status_code)
     print("DEBUG body:", response.text)
     assert response.status_code == 401
+
+
+############### TEST DODANIE KATEGORRI PRZEZ NIEAUTORYZOWANEGO USERA ###############
+
+# czy uzytkownik bez tokena nie moze dodac kategorii
+@pytest.mark.asyncio
+async def test_unauthorized_create_category(async_client):
+    payload = {"name": "Nielegalna", "is_offline": False}
+    response = await async_client.post(
+        "/users/me/categories",
+        json=payload
+        # brak naglowka Authorization
+    )
+    print("DEBUG status:", response.status_code)
+    print("DEBUG body:", response.text)
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Not authenticated"
+
