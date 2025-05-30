@@ -182,3 +182,14 @@ async def test_get_user_info(async_client):
     data = response.json()
     assert "username" in data
     assert data["username"] == "johndoe"
+
+############### TEST BRAK AUTORYZACJI = BRAK DOSTEPU ###############
+
+# czy brak tokena powoduje blad 401 przy probie dostepu do /users/me
+
+@pytest.mark.asyncio
+async def test_unauthorized_access_to_user_info(async_client):
+    response = await async_client.get("/users/me")
+    print("DEBUG status:", response.status_code)
+    print("DEBUG body:", response.text)
+    assert response.status_code == 401
