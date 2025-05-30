@@ -7,13 +7,13 @@ import pytest_asyncio
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlmodel import SQLModel
-
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from src.models.user import User
 from src.main import app
 from src.services.password import pwd_context
 from src.services.database import get_session as get_session_original
 from src.data.dummy_users import fake_users_db
+from sqlmodel import select
 
 sqlite_url = "sqlite+aiosqlite:///:memory:"
 
@@ -138,16 +138,10 @@ async def test_create_category(async_client):
 # CMD: pytest -s
 # SERVER CMD: python3 -m src.main
 
-############### TEST NOWEJ KATEGORII WYDATKOW PRZEZ API ###############
-
-# czy mozna dodac nowa kategorie wydatkow przez API,
-# czyli czy endpoint POST /users/me/categories dziala poprawnie 
-# i zwraca prawidlowa odpowiedz
-
-import pytest
 
 @pytest.mark.asyncio
 async def test_create_category(async_client):
+    # // GIVEN & WHEN
     auth_token = await get_auth_token(async_client)
     payload = {"name": "Testowa Kategoria", "is_offline": False}
     response = await async_client.post(
@@ -156,18 +150,16 @@ async def test_create_category(async_client):
         headers={"Authorization": auth_token}
     )
 
+    # // THEN
     assert response.status_code == 201
     data = response.json()
     assert data["name"] == "Testowa Kategoria"
     assert "id" in data
 
-############### TEST POBIERANIA INFO O UZYTKOWNIKU ###############
-#czy uzytkownik może pobrać swoje dane przez /users/me,
-# czy odpowiedź ma status 200,
-# czy dane zawierają np. username
 
 @pytest.mark.asyncio
 async def test_get_user_info(async_client):
+    # // GIVEN & WHEN
     auth_token = await get_auth_token(async_client)
 
     response = await async_client.get(
@@ -175,98 +167,80 @@ async def test_get_user_info(async_client):
         headers={"Authorization": auth_token}
     )
 
-    print("DEBUG status:", response.status_code)
-    print("DEBUG body:", response.text)
-
+    # // THEN
     assert response.status_code == 200
     data = response.json()
     assert "username" in data
     assert data["username"] == "johndoe"
 
-############### TEST BRAK AUTORYZACJI = BRAK DOSTEPU ###############
-
-# czy brak tokena powoduje blad 401 przy probie dostepu do /users/me
 
 @pytest.mark.asyncio
 async def test_unauthorized_access_to_user_info(async_client):
+    # // GIVEN & WHEN
     response = await async_client.get("/users/me")
-    print("DEBUG status:", response.status_code)
-    print("DEBUG body:", response.text)
+    # // THEN
     assert response.status_code == 401
 
 
-############### TEST DODANIE KATEGORRI PRZEZ NIEAUTORYZOWANEGO USERA ###############
-
-# czy uzytkownik bez tokena nie moze dodac kategorii
 @pytest.mark.asyncio
 async def test_unauthorized_create_category(async_client):
+    # // GIVEN & WHEN
     payload = {"name": "Nielegalna", "is_offline": False}
     response = await async_client.post(
         "/users/me/categories",
         json=payload
-        # brak naglowka Authorization
     )
-    print("DEBUG status:", response.status_code)
-    print("DEBUG body:", response.text)
 
+    # // THEN
     assert response.status_code == 401
     assert response.json()["detail"] == "Not authenticated"
 
-############### TEST DODANIE KATEGORRI O ISTNIEJACEJ NAZWIE ###############
 
 @pytest.mark.asyncio
 async def test_create_duplicate_category(async_client):
+    # // GIVEN & WHEN
     auth_token = await get_auth_token(async_client)
 
     payload = {"name": "UnikalnaKategoria", "is_offline": False}
-    # dodajemy kategorię 1szy raz
     response1 = await async_client.post(
         "/users/me/categories",
         json=payload,
         headers={"Authorization": auth_token}
     )
+    # // THEN
     assert response1.status_code == 201
 
-    # dodajemy kat. o tej samej nazwie jeszcze raz
     response2 = await async_client.post(
         "/users/me/categories",
         json=payload,
         headers={"Authorization": auth_token}
     )
-    print("DEBUG status:", response2.status_code)
-    print("DEBUG body:", response2.text)
 
     assert response2.status_code == 400
     assert "already exists" in response2.text.lower()
 
-############### TEST POBRANIE DANYCH USERA Z AUTORYZACJA  ###############
 
 @pytest.mark.asyncio
 async def test_get_current_user_info(async_client):
+    # // GIVEN & WHEN
     auth_token = await get_auth_token(async_client)
 
     response = await async_client.get(
         "/users/me",
         headers={"Authorization": auth_token}
     )
-    print("DEBUG status:", response.status_code)
-    print("DEBUG body:", response.text)
 
+    # // THEN
     assert response.status_code == 200
     data = response.json()
     assert "username" in data
     assert "email" in data
 
 
-############### TEST ZAPISU I ODCZYTU USERA  ###############
-# dodwanie użytkownika bezpośrednio do bazy + pobranie i sprawdzeniea danych
-
-from sqlmodel import select
-from src.models.user import User
-
 @pytest.mark.asyncio
 async def test_sql_insert_and_query_user():
-    async with AsyncSession(engine) as session:
+    # // GIVEN & WHEN
+    async for session in get_session():
         user = User(
             username="sqltestuser",
             full_name="SQL Test User",
@@ -281,26 +255,16 @@ async def test_sql_insert_and_query_user():
         result = await session.execute(query)
         user_from_db = result.scalar_one_or_none()
 
+    # // THEN
         assert user_from_db is not None
         assert user_from_db.username == "sqltestuser"
         assert user_from_db.email == "sqltestuser@example.com"
 
-############### TEST AKTUALIZACJI REKORDU W BAZIE  ###############
-
-# dod. usera z jednym emailem
-# pobieramy go, zmieniamy pole email
-# zapisujemy zmiany
-# ponownie pobieramy i sprawdzamy, czy email się zmienił
-
-from sqlmodel import select
-from src.models.user import User
-import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
 
 @pytest.mark.asyncio
 async def test_sql_update_user_email():
-    async with AsyncSession(engine) as session:
-        # dod. nowego usera
+    # // GIVEN & WHEN
+    async for session in get_session():
         user = User(
             username="sqlupdateuser",
             full_name="SQL Update User",
@@ -311,7 +275,6 @@ async def test_sql_update_user_email():
         session.add(user)
         await session.commit()
 
-        # aktual. email
         query = select(User).where(User.username == "sqlupdateuser")
         result = await session.execute(query)
         user_from_db = result.scalar_one()
@@ -320,8 +283,8 @@ async def test_sql_update_user_email():
         session.add(user_from_db)
         await session.commit()
 
-        # pobieramy znowu, by sprawdzic aktualizacje
         result = await session.execute(query)
         updated_user = result.scalar_one()
 
+    # // THEN
         assert updated_user.email == "new_email@example.com"
