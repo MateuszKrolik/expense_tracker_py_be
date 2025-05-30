@@ -52,35 +52,35 @@
 
 #### 1. Tryb offline z synchronizacją:
 
-![alt text](images/1_offline_modal.jpeg)
-![alt text](images/2_offline_mode.jpeg)
-![alt text](images/3_offline_sync.jpeg)
-![alt text](images/4_offline_back_online.jpeg)
+<img src="images/1_offline_modal.jpeg" width="300" alt="Offline Modal">
+<img src="images/2_offline_mode.jpeg" width="300" alt="Offline Mode">
+<img src="images/3_offline_sync.jpeg" width="300" alt="Offline Sync">
+<img src="images/4_offline_back_online.jpeg" width="300" alt="Back Online">
 
 #### 2. Upublicznianie wydatków:
 
-![alt text](images/5_sharing.jpeg)
+<img src="images/5_sharing.jpeg" width="300" alt="Sharing Expenses">
 
 #### 3. Dodawawnie zdjęć (np. paragonów):
 
-![alt text](images/10_image_upload.jpeg)
+<img src="images/10_image_upload.jpeg" width="300" alt="Receipt Upload">
 
 #### 4. Uwierzytelnianie:
 
-![alt text](images/11_auth.jpeg)
+<img src="images/11_auth.jpeg" width="300" alt="Authentication">
 
 #### 5. Kategoryzacja + Wyszukiwanie (Fuzzy search):
 
-![alt text](images/9_fuzzy_search.jpeg)
+<img src="images/9_fuzzy_search.jpeg" width="300" alt="Fuzzy Search">
 
 #### 6. Ustalanie budżetu:
 
-![alt text](images/6_no_budget.jpeg)
-![alt text](images/7_budget.jpeg)
+<img src="images/6_no_budget.jpeg" width="300" alt="No Budget">
+<img src="images/7_budget.jpeg" width="300" alt="Budget Set">
 
 #### 7. Walidacja:
 
-![alt text](images/8_budget_validation.jpeg)
+<img src="images/8_budget_validation.jpeg" width="300" alt="Budget Validation">
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
