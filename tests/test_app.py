@@ -137,3 +137,26 @@ async def test_signup_validation(async_client):
 
 # CMD: pytest -s
 # SERVER CMD: python3 -m src.main
+
+############### TEST NOWEJ KATEGORII WYDATKOW PRZEZ API ###############
+
+# czy mozna dodac nowa kategorie wydatkow przez API,
+# czyli czy endpoint POST /users/me/categories dziala poprawnie 
+# i zwraca prawidlowa odpowiedz
+
+import pytest
+
+@pytest.mark.asyncio
+async def test_create_category(async_client):
+    auth_token = await get_auth_token(async_client)
+    payload = {"name": "Testowa Kategoria", "is_offline": False}
+    response = await async_client.post(
+        "/users/me/categories",
+        json=payload,
+        headers={"Authorization": auth_token}
+    )
+
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == "Testowa Kategoria"
+    assert "id" in data
