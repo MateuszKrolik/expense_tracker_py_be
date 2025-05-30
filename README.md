@@ -158,6 +158,10 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <!-- CONTACT -->
 
+### Link do repozytorium Backend: [https://github.com/MateuszKrolik/expense_tracker_py_be](https://github.com/MateuszKrolik/expense_tracker_py_be)
+
+### Link do repozytorium FrontEnd: [https://github.com/xstiff/expense-tracker-ui](https://github.com/xstiff/expense-tracker-ui)
+
 ## Team Lead & Backend Dev
 
 Mateusz Królik - [dsw51346@student.dsw.edu.pl](mailto:dsw51346@student.dsw.edu.pl)
@@ -173,8 +177,6 @@ Szymon Truss - [dsw50232@student.dsw.edu.pl](mailto:dsw50232@student.dsw.edu.pl)
 #### DevOps:
 
 Kacper Sztuba - [dsw50737@student.dsw.edu.pl](mailto:dsw50737@student.dsw.edu.pl))
-
-Link do repozytorium FrontEnd: [https://github.com/xstiff/expense-tracker-ui](https://github.com/xstiff/expense-tracker-ui)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

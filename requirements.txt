@@ -1,0 +1,19 @@
+fastapi[standard]
+attrs
+pydantic
+uvicorn
+sqlmodel
+sqlalchemy
+# async
+aiosqlite
+greenlet
+asyncpg
+# auth
+python-multipart
+pyjwt
+passlib[bcrypt]
+# testing
+pytest
+pytest-asyncio
+# gcp
+google-cloud-storage
