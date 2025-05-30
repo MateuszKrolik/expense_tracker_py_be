@@ -160,3 +160,25 @@ async def test_create_category(async_client):
     data = response.json()
     assert data["name"] == "Testowa Kategoria"
     assert "id" in data
+
+############### TEST POBIERANIA INFO O UZYTKOWNIKU ###############
+#czy uzytkownik może pobrać swoje dane przez /users/me,
+# czy odpowiedź ma status 200,
+# czy dane zawierają np. username
+
+@pytest.mark.asyncio
+async def test_get_user_info(async_client):
+    auth_token = await get_auth_token(async_client)
+
+    response = await async_client.get(
+        "/users/me",
+        headers={"Authorization": auth_token}
+    )
+
+    print("DEBUG status:", response.status_code)
+    print("DEBUG body:", response.text)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "username" in data
+    assert data["username"] == "johndoe"
