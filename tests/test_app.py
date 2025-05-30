@@ -238,3 +238,21 @@ async def test_create_duplicate_category(async_client):
 
     assert response2.status_code == 400
     assert "already exists" in response2.text.lower()
+
+############### TEST POBRANIE DANYCH USERA Z AUTORYZACJA  ###############
+
+@pytest.mark.asyncio
+async def test_get_current_user_info(async_client):
+    auth_token = await get_auth_token(async_client)
+
+    response = await async_client.get(
+        "/users/me",
+        headers={"Authorization": auth_token}
+    )
+    print("DEBUG status:", response.status_code)
+    print("DEBUG body:", response.text)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "username" in data
+    assert "email" in data
