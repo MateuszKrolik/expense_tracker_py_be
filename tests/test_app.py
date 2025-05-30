@@ -284,3 +284,44 @@ async def test_sql_insert_and_query_user():
         assert user_from_db is not None
         assert user_from_db.username == "sqltestuser"
         assert user_from_db.email == "sqltestuser@example.com"
+
+############### TEST AKTUALIZACJI REKORDU W BAZIE  ###############
+
+# dod. usera z jednym emailem
+# pobieramy go, zmieniamy pole email
+# zapisujemy zmiany
+# ponownie pobieramy i sprawdzamy, czy email się zmienił
+
+from sqlmodel import select
+from src.models.user import User
+import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
+
+@pytest.mark.asyncio
+async def test_sql_update_user_email():
+    async with AsyncSession(engine) as session:
+        # dod. nowego usera
+        user = User(
+            username="sqlupdateuser",
+            full_name="SQL Update User",
+            email="old_email@example.com",
+            hashed_password="fakehashedpassword",
+            disabled=False,
+        )
+        session.add(user)
+        await session.commit()
+
+        # aktual. email
+        query = select(User).where(User.username == "sqlupdateuser")
+        result = await session.execute(query)
+        user_from_db = result.scalar_one()
+
+        user_from_db.email = "new_email@example.com"
+        session.add(user_from_db)
+        await session.commit()
+
+        # pobieramy znowu, by sprawdzic aktualizacje
+        result = await session.execute(query)
+        updated_user = result.scalar_one()
+
+        assert updated_user.email == "new_email@example.com"
