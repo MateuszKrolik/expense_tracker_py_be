@@ -1,4 +1,3 @@
-import json
 import os
 import sys
 from httpx import ASGITransport, AsyncClient
@@ -14,6 +13,7 @@ from src.main import app
 from src.services.password import pwd_context
 from src.services.database import get_session as get_session_original
 from src.data.dummy_users import fake_users_db
+from sqlmodel import select
 
 sqlite_url = "sqlite+aiosqlite:///:memory:"
 
@@ -40,8 +40,6 @@ async def async_client():
 @pytest_asyncio.fixture(autouse=True)
 async def setup_and_teardown_db():
     async with engine.begin() as conn:
-        # from src.models.category import Category
-
         await conn.run_sync(SQLModel.metadata.drop_all)
         await conn.run_sync(SQLModel.metadata.create_all)
 
@@ -89,7 +87,6 @@ async def test_signup_password_hashing(async_client):
         },
     )
     response_json = response.json()
-    print(f"response_json: {json.dumps(response_json)}")
     hashed_password = response_json["hashed_password"]
     assert response.status_code == status.HTTP_201_CREATED
     assert hashed_password != unhashed_password
@@ -111,29 +108,140 @@ async def test_signup_validation(async_client):
     assert response.json() == {"detail": "400: User already exists."}
 
 
-# @pytest.mark.asyncio
-# async def test_create_category(async_client):
-#     auth_token = await get_auth_token(async_client)
-#     category_base = {"name": "random_name", "is_offline": False}
-#     response = await async_client.post(
-#         url="/users/me/categories",
-#         json=category_base,
-#         headers={
-#             "Authorization": auth_token,
-#         },
-#     )
-#     print(response.json())
-#     assert response.status_code == 201
-#     response = await async_client.post(
-#         url="/users/me/categories",
-#         json=category_base,
-#         headers={
-#             "Authorization": auth_token,
-#         },
-#     )
-#     assert response.status_code == 400
-#     assert response.json()["detail"] == "400: Category with given name already exists."
+@pytest.mark.asyncio
+async def test_create_category(async_client):
+    auth_token = await get_auth_token(async_client)
+    category_base = {"name": "random_name", "is_offline": False}
+    response = await async_client.post(
+        url="/users/me/categories",
+        json=category_base,
+        headers={
+            "Authorization": auth_token,
+        },
+    )
+    assert response.status_code == 201
 
 
-# CMD: pytest -s
-# SERVER CMD: python3 -m src.main
+@pytest.mark.asyncio
+async def test_get_user_info(async_client):
+    # GIVEN & WHEN
+    auth_token = await get_auth_token(async_client)
+
+    response = await async_client.get(
+        "/users/me", headers={"Authorization": auth_token}
+    )
+
+    # THEN
+    assert response.status_code == 200
+    data = response.json()
+    assert "username" in data
+    assert data["username"] == "johndoe"
+
+
+@pytest.mark.asyncio
+async def test_unauthorized_access_to_user_info(async_client):
+    # GIVEN & WHEN
+    response = await async_client.get("/users/me")
+    # THEN
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_unauthorized_create_category(async_client):
+    # GIVEN & WHEN
+    payload = {"name": "Illegal", "is_offline": False}
+    response = await async_client.post("/users/me/categories", json=payload)
+
+    # THEN
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Not authenticated"
+
+
+@pytest.mark.asyncio
+async def test_create_duplicate_category(async_client):
+    # GIVEN & WHEN
+    auth_token = await get_auth_token(async_client)
+
+    payload = {"name": "UniqueCategory", "is_offline": False}
+    response1 = await async_client.post(
+        "/users/me/categories", json=payload, headers={"Authorization": auth_token}
+    )
+    # THEN
+    assert response1.status_code == 201
+
+    response2 = await async_client.post(
+        "/users/me/categories", json=payload, headers={"Authorization": auth_token}
+    )
+
+    assert response2.status_code == 400
+    assert "already exists" in response2.text.lower()
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_info(async_client):
+    # GIVEN & WHEN
+    auth_token = await get_auth_token(async_client)
+
+    response = await async_client.get(
+        "/users/me", headers={"Authorization": auth_token}
+    )
+
+    # THEN
+    assert response.status_code == 200
+    data = response.json()
+    assert "username" in data
+    assert "email" in data
+
+
+@pytest.mark.asyncio
+async def test_sql_insert_and_query_user():
+    # GIVEN & WHEN
+    async for session in get_session():
+        user = User(
+            username="sqltestuser",
+            full_name="SQL Test User",
+            email="sqltestuser@example.com",
+            hashed_password="fakehashedpassword",
+            disabled=False,
+        )
+        session.add(user)
+        await session.commit()
+
+        query = select(User).where(User.username == "sqltestuser")
+        result = await session.execute(query)
+        user_from_db = result.scalar_one_or_none()
+
+        # THEN
+        assert user_from_db is not None
+        assert user_from_db.username == "sqltestuser"
+        assert user_from_db.email == "sqltestuser@example.com"
+
+
+@pytest.mark.asyncio
+async def test_sql_update_user_email():
+    # GIVEN & WHEN
+    async for session in get_session():
+        user = User(
+            username="sqlupdateuser",
+            full_name="SQL Update User",
+            email="old_email@example.com",
+            hashed_password="fakehashedpassword",
+            disabled=False,
+        )
+        session.add(user)
+        await session.commit()
+
+        query = select(User).where(User.username == "sqlupdateuser")
+        result = await session.execute(query)
+        user_from_db = result.scalar_one()
+
+        user_from_db.email = "new_email@example.com"
+        session.add(user_from_db)
+        await session.commit()
+
+        result = await session.execute(query)
+        updated_user = result.scalar_one()
+
+        # THEN
+        assert updated_user.email == "new_email@example.com"
+
