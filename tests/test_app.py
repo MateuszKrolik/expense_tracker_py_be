@@ -40,7 +40,6 @@ async def async_client():
 @pytest_asyncio.fixture(autouse=True)
 async def setup_and_teardown_db():
     async with engine.begin() as conn:
-        # from src.models.category import Category
 
         await conn.run_sync(SQLModel.metadata.drop_all)
         await conn.run_sync(SQLModel.metadata.create_all)
@@ -89,7 +88,6 @@ async def test_signup_password_hashing(async_client):
         },
     )
     response_json = response.json()
-    print(f"response_json: {json.dumps(response_json)}")
     hashed_password = response_json["hashed_password"]
     assert response.status_code == status.HTTP_201_CREATED
     assert hashed_password != unhashed_password
@@ -122,7 +120,6 @@ async def test_create_category(async_client):
             "Authorization": auth_token,
         },
     )
-    print(response.json())
     assert response.status_code == 201
     response = await async_client.post(
         url="/users/me/categories",
@@ -135,31 +132,9 @@ async def test_create_category(async_client):
     assert response.json()["detail"] == "400: Category with given name already exists."
 
 
-# CMD: pytest -s
-# SERVER CMD: python3 -m src.main
-
-
-@pytest.mark.asyncio
-async def test_create_category(async_client):
-    # // GIVEN & WHEN
-    auth_token = await get_auth_token(async_client)
-    payload = {"name": "Testowa Kategoria", "is_offline": False}
-    response = await async_client.post(
-        "/users/me/categories",
-        json=payload,
-        headers={"Authorization": auth_token}
-    )
-
-    # // THEN
-    assert response.status_code == 201
-    data = response.json()
-    assert data["name"] == "Testowa Kategoria"
-    assert "id" in data
-
-
 @pytest.mark.asyncio
 async def test_get_user_info(async_client):
-    # // GIVEN & WHEN
+    # GIVEN & WHEN
     auth_token = await get_auth_token(async_client)
 
     response = await async_client.get(
@@ -167,7 +142,7 @@ async def test_get_user_info(async_client):
         headers={"Authorization": auth_token}
     )
 
-    # // THEN
+    # THEN
     assert response.status_code == 200
     data = response.json()
     assert "username" in data
@@ -176,38 +151,38 @@ async def test_get_user_info(async_client):
 
 @pytest.mark.asyncio
 async def test_unauthorized_access_to_user_info(async_client):
-    # // GIVEN & WHEN
+    # GIVEN & WHEN
     response = await async_client.get("/users/me")
-    # // THEN
+    # THEN
     assert response.status_code == 401
 
 
 @pytest.mark.asyncio
 async def test_unauthorized_create_category(async_client):
-    # // GIVEN & WHEN
-    payload = {"name": "Nielegalna", "is_offline": False}
+    # GIVEN & WHEN
+    payload = {"name": "Illegal", "is_offline": False}
     response = await async_client.post(
         "/users/me/categories",
         json=payload
     )
 
-    # // THEN
+    # THEN
     assert response.status_code == 401
     assert response.json()["detail"] == "Not authenticated"
 
 
 @pytest.mark.asyncio
 async def test_create_duplicate_category(async_client):
-    # // GIVEN & WHEN
+    # GIVEN & WHEN
     auth_token = await get_auth_token(async_client)
 
-    payload = {"name": "UnikalnaKategoria", "is_offline": False}
+    payload = {"name": "UniqueCategory", "is_offline": False}
     response1 = await async_client.post(
         "/users/me/categories",
         json=payload,
         headers={"Authorization": auth_token}
     )
-    # // THEN
+    # THEN
     assert response1.status_code == 201
 
     response2 = await async_client.post(
@@ -222,7 +197,7 @@ async def test_create_duplicate_category(async_client):
 
 @pytest.mark.asyncio
 async def test_get_current_user_info(async_client):
-    # // GIVEN & WHEN
+    # GIVEN & WHEN
     auth_token = await get_auth_token(async_client)
 
     response = await async_client.get(
@@ -230,7 +205,7 @@ async def test_get_current_user_info(async_client):
         headers={"Authorization": auth_token}
     )
 
-    # // THEN
+    # THEN
     assert response.status_code == 200
     data = response.json()
     assert "username" in data
@@ -239,7 +214,7 @@ async def test_get_current_user_info(async_client):
 
 @pytest.mark.asyncio
 async def test_sql_insert_and_query_user():
-    # // GIVEN & WHEN
+    # GIVEN & WHEN
     async for session in get_session():
         user = User(
             username="sqltestuser",
@@ -255,7 +230,7 @@ async def test_sql_insert_and_query_user():
         result = await session.execute(query)
         user_from_db = result.scalar_one_or_none()
 
-    # // THEN
+    #THEN
         assert user_from_db is not None
         assert user_from_db.username == "sqltestuser"
         assert user_from_db.email == "sqltestuser@example.com"
@@ -263,7 +238,7 @@ async def test_sql_insert_and_query_user():
 
 @pytest.mark.asyncio
 async def test_sql_update_user_email():
-    # // GIVEN & WHEN
+    # GIVEN & WHEN
     async for session in get_session():
         user = User(
             username="sqlupdateuser",
@@ -286,5 +261,5 @@ async def test_sql_update_user_email():
         result = await session.execute(query)
         updated_user = result.scalar_one()
 
-    # // THEN
+    # THEN
         assert updated_user.email == "new_email@example.com"
